@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Larsen - Planificateur de Répétitions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #080605 0%, #2a2a2a 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 30px 40px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 3.5em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #c92033 0%, #080605 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+        
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 0 40px;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab-button {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 20px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            position: relative;
+        }
+        
+        .tab-button:hover {
+            color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .tab-button.active {
+            color: white;
+            border-bottom-color: #c92033;
+            background: rgba(201, 32, 51, 0.1);
+        }
+        
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 40px;
+            background: white;
+            margin: 20px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Morceaux Tab */
+        .morceaux-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .morceau-card {
+            background: linear-gradient(135deg, #c92033 0%, #080605 100%);
+            padding: 25px;
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(201, 32, 51, 0.3);
+            transition: transform 0.3s;
+        }
+        
+        .morceau-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(201, 32, 51, 0.4);
+        }
+        
+        .morceau-titre {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .morceau-musiciens {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .musicien-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .remove-musicien {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            width: 18px;
+            height: 18px;
+            line-height: 1;
+        }
+        
+        .remove-musicien:hover {
+            opacity: 0.7;
+        }
+        
+        .add-morceau-card {
+            border: 3px dashed #c92033;
+            background: rgba(201, 32, 51, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .add-morceau-card:hover {
+            background: rgba(201, 32, 51, 0.1);
+            border-color: #080605;
+        }
+        
+        .add-icon {
+            font-size: 3em;
+            color: #c92033;
+        }
+        
+        /* Dispos Tab */
+        .dispos-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .date-display {
+            font-size: 1.2em;
+            color: #c92033;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .date-display:hover {
+            background: rgba(201, 32, 51, 0.1);
+            border-color: #c92033;
+        }
+
+        .date-display input {
+            font-size: 1em;
+            color: #c92033;
+            font-weight: 600;
+            border: 2px solid #c92033;
+            padding: 8px 12px;
+            border-radius: 8px;
+            width: 300px;
+        }
+        
+        .musicien-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .musicien-btn {
+            background: white;
+            border: 2px solid #c92033;
+            color: #c92033;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .musicien-btn:hover {
+            background: rgba(201, 32, 51, 0.1);
+        }
+        
+        .musicien-btn.active {
+            background: linear-gradient(135deg, #c92033 0%, #080605 100%);
+            color: white;
+        }
+        
+        .calendar-week {
+            display: grid;
+            grid-template-columns: 100px repeat(5, 1fr);
+            gap: 1px;
+            background: #e0e0e0;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .calendar-header {
+            background: #c92033;
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .time-label {
+            background: #f5f5f5;
+            padding: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .time-slot {
+            background: white;
+            padding: 10px;
+            min-height: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            user-select: none;
+        }
+        
+        .time-slot:hover {
+            background: rgba(201, 32, 51, 0.1);
+        }
+        
+        .time-slot.selected {
+            background: linear-gradient(135deg, #c92033 0%, #080605 100%);
+            color: white;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-title {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #c92033;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #c92033;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #c92033 0%, #080605 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(201, 32, 51, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+        
+        .musicien-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .musicien-chip {
+            background: #c92033;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .chip-remove {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+        }
+        
+        .add-musicien-btn {
+            background: rgba(201, 32, 51, 0.1);
+            border: 2px dashed #c92033;
+            color: #c92033;
+            padding: 8px 16px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        
+        .add-musicien-btn:hover {
+            background: rgba(201, 32, 51, 0.2);
+        }
+
+        .delete-morceau {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .delete-morceau:hover {
+            background: rgba(255, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>LARSEN</h1>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="nav-tabs">
+            <button class="tab-button active" onclick="switchTab('morceaux')">🎵 Morceaux</button>
+            <button class="tab-button" onclick="switchTab('dispos')">📅 Dispos</button>
+            <button class="tab-button" onclick="switchTab('planning')">📋 Planning</button>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Tab Morceaux -->
+            <div id="morceaux" class="tab-content active">
+                <div class="morceaux-grid" id="morceaux-grid">
+                    <!-- Les morceaux seront ajoutés ici -->
+                </div>
+            </div>
+            
+            <!-- Tab Dispos -->
+            <div id="dispos" class="tab-content">
+                <div class="dispos-header">
+                    <div class="date-display" id="date-display"></div>
+                    <div class="musicien-selector" id="musicien-selector">
+                        <!-- Les boutons musiciens seront ajoutés ici -->
+                    </div>
+                </div>
+                <div id="calendar-container"></div>
+            </div>
+            
+            <!-- Tab Planning -->
+            <div id="planning" class="tab-content">
+                <button class="btn btn-primary" onclick="genererPlanning()" style="margin-bottom: 20px;">🎵 Générer le Planning</button>
+                <div id="planning-result"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Nouveau Morceau -->
+    <div id="modal-morceau" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Nouveau Morceau</h2>
+            <div class="form-group">
+                <label class="form-label">Titre du morceau</label>
+                <input type="text" id="input-titre" class="form-input" placeholder="Ex: Chanson trop bien">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Musiciens</label>
+                <div id="musiciens-chips" class="musicien-chips"></div>
+                <input type="text" id="input-musicien" class="form-input" placeholder="Patrick Bruel?">
+                <button class="add-musicien-btn" onclick="ajouterMusicienModal()">+ Ajouter</button>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="fermerModal()">Annuler</button>
+                <button class="btn btn-primary" onclick="sauvegarderMorceau()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Données globales
+        let morceaux = [
+            { titre: "Dream Girl", musiciens: ["Ugo", "Stan", "Titou", "Lisa"] }
+        ];
+        let disponibilites = {};
+        let musicienActif = null;
+        let heures = Array.from({length: 14}, (_, i) => 8 + i); // 8h à 21h
+        let jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
+        let isDragging = false;
+        let dragMode = null; // 'select' ou 'deselect'
+        let dateTexte = "Sem - 07/10 au 11/10";
+        let isEditingDate = false;
+        
+        // Initialisation
+        function init() {
+            afficherDate();
+            afficherMorceaux();
+            initialiserMusiciens();
+            afficherSelecteurMusiciens();
+        }
+        
+        function afficherDate() {
+            const container = document.getElementById('date-display');
+            if (isEditingDate) {
+                container.innerHTML = `<input type="text" id="date-input" value="${dateTexte}" 
+                    onblur="sauvegarderDate()" onkeypress="if(event.key==='Enter') sauvegarderDate()">`;
+                document.getElementById('date-input').focus();
+                document.getElementById('date-input').select();
+            } else {
+                container.textContent = dateTexte;
+            }
+        }
+
+        function toggleEditDate() {
+            isEditingDate = true;
+            afficherDate();
+        }
+
+        function sauvegarderDate() {
+            const input = document.getElementById('date-input');
+            if (input) {
+                dateTexte = input.value.trim() || dateTexte;
+                isEditingDate = false;
+                afficherDate();
+            }
+        }
+        
+        function initialiserMusiciens() {
+            const allMusiciens = new Set();
+            morceaux.forEach(m => m.musiciens.forEach(mus => allMusiciens.add(mus)));
+            allMusiciens.forEach(m => {
+                if (!disponibilites[m]) {
+                    disponibilites[m] = Array(5).fill(null).map(() => []);
+                }
+            });
+        }
+        
+        // Gestion des onglets
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'dispos') {
+                afficherSelecteurMusiciens();
+            }
+        }
+        
+        // Gestion des morceaux
+        function afficherMorceaux() {
+            const grid = document.getElementById('morceaux-grid');
+            grid.innerHTML = '';
+            
+            morceaux.forEach((morceau, index) => {
+                const card = document.createElement('div');
+                card.className = 'morceau-card';
+                card.innerHTML = `
+                    <div class="morceau-titre">${morceau.titre}</div>
+                    <div class="morceau-musiciens">
+                        ${morceau.musiciens.map(m => `<span class="musicien-badge">${m}</span>`).join('')}
+                    </div>
+                    <button class="delete-morceau" onclick="supprimerMorceau(${index})">🗑️ Supprimer</button>
+                `;
+                grid.appendChild(card);
+            });
+            
+            // Carte "Ajouter"
+            const addCard = document.createElement('div');
+            addCard.className = 'morceau-card add-morceau-card';
+            addCard.innerHTML = '<div class="add-icon">+</div>';
+            addCard.onclick = ouvrirModal;
+            grid.appendChild(addCard);
+        }
+        
+        function supprimerMorceau(index) {
+            if (confirm('Supprimer ce morceau ?')) {
+                morceaux.splice(index, 1);
+                afficherMorceaux();
+            }
+        }
+        
+        // Modal
+        let musiciensTemp = [];
+        
+        function ouvrirModal() {
+            musiciensTemp = [];
+            document.getElementById('input-titre').value = '';
+            document.getElementById('input-musicien').value = '';
+            document.getElementById('musiciens-chips').innerHTML = '';
+            document.getElementById('modal-morceau').classList.add('active');
+        }
+        
+        function fermerModal() {
+            document.getElementById('modal-morceau').classList.remove('active');
+        }
+        
+        function ajouterMusicienModal() {
+            const input = document.getElementById('input-musicien');
+            const nom = input.value.trim();
+            if (!nom || musiciensTemp.includes(nom)) return;
+            
+            musiciensTemp.push(nom);
+            afficherMusiciensTemp();
+            input.value = '';
+        }
+        
+        function afficherMusiciensTemp() {
+            const container = document.getElementById('musiciens-chips');
+            container.innerHTML = musiciensTemp.map((m, i) => `
+                <div class="musicien-chip">
+                    ${m}
+                    <button class="chip-remove" onclick="retirerMusicienTemp(${i})">×</button>
+                </div>
+            `).join('');
+        }
+        
+        function retirerMusicienTemp(index) {
+            musiciensTemp.splice(index, 1);
+            afficherMusiciensTemp();
+        }
+        
+        function sauvegarderMorceau() {
+            const titre = document.getElementById('input-titre').value.trim();
+            if (!titre || musiciensTemp.length === 0) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+            
+            morceaux.push({ titre, musiciens: [...musiciensTemp] });
+            initialiserMusiciens();
+            afficherMorceaux();
+            fermerModal();
+        }
+        
+        // Gestion des disponibilités
+        function afficherSelecteurMusiciens() {
+            const container = document.getElementById('musicien-selector');
+            const allMusiciens = Object.keys(disponibilites);
+            
+            container.innerHTML = allMusiciens.map(m => `
+                <button class="musicien-btn ${musicienActif === m ? 'active' : ''}" 
+                        onclick="selectionnerMusicien('${m}')">
+                    ${m}
+                </button>
+            `).join('');
+            
+            if (!musicienActif && allMusiciens.length > 0) {
+                selectionnerMusicien(allMusiciens[0]);
+            }
+        }
+        
+        function selectionnerMusicien(nom) {
+            musicienActif = nom;
+            afficherSelecteurMusiciens();
+            afficherCalendrier();
+        }
+        
+        function afficherCalendrier() {
+            const container = document.getElementById('calendar-container');
+            if (!musicienActif) {
+                container.innerHTML = '<p>Sélectionnez un musicien</p>';
+                return;
+            }
+            
+            let html = '<div class="calendar-week">';
+            
+            // Headers
+            html += '<div class="calendar-header">Heure</div>';
+            jours.forEach(jour => {
+                html += `<div class="calendar-header">${jour}</div>`;
+            });
+            
+            // Time slots
+            heures.forEach(heure => {
+                html += `<div class="time-label">${heure}h</div>`;
+                jours.forEach((jour, jourIdx) => {
+                    const isSelected = estDisponible(jourIdx, heure);
+                    html += `<div class="time-slot ${isSelected ? 'selected' : ''}" 
+                                  data-jour="${jourIdx}" data-heure="${heure}"
+                                  onmousedown="startDrag(${jourIdx}, ${heure})"
+                                  onmouseenter="continueDrag(${jourIdx}, ${heure})"
+                                  onmouseup="endDrag()">
+                             </div>`;
+                });
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        function estDisponible(jourIdx, heure) {
+            const dispos = disponibilites[musicienActif][jourIdx];
+            return dispos.some(plage => heure >= plage[0] && heure < plage[1]);
+        }
+
+        function startDrag(jourIdx, heure) {
+            isDragging = true;
+            const isCurrentlySelected = estDisponible(jourIdx, heure);
+            dragMode = isCurrentlySelected ? 'deselect' : 'select';
+            toggleDispo(jourIdx, heure, dragMode);
+        }
+
+        function continueDrag(jourIdx, heure) {
+            if (!isDragging) return;
+            toggleDispo(jourIdx, heure, dragMode);
+        }
+
+        function endDrag() {
+            isDragging = false;
+            dragMode = null;
+        }
+        
+        function toggleDispo(jourIdx, heure, mode = null) {
+            if (!musicienActif) return;
+            
+            const dispos = disponibilites[musicienActif][jourIdx];
+            const isCurrentlySelected = dispos.some(plage => heure >= plage[0] && heure < plage[1]);
+            
+            // Déterminer l'action basée sur le mode
+            const shouldSelect = mode ? mode === 'select' : !isCurrentlySelected;
+            
+            if (shouldSelect && isCurrentlySelected) return; // Déjà sélectionné
+            if (!shouldSelect && !isCurrentlySelected) return; // Déjà désélectionné
+            
+            if (!shouldSelect) {
+                // Retirer cette heure
+                for (let i = 0; i < dispos.length; i++) {
+                    const [debut, fin] = dispos[i];
+                    if (heure >= debut && heure < fin) {
+                        if (heure === debut && heure + 1 === fin) {
+                            dispos.splice(i, 1);
+                        } else if (heure === debut) {
+                            dispos[i][0] = heure + 1;
+                        } else if (heure + 1 === fin) {
+                            dispos[i][1] = heure;
+                        } else {
+                            const nouvellePlage = [heure + 1, fin];
+                            dispos[i][1] = heure;
+                            dispos.push(nouvellePlage);
+                        }
+                        break;
+                    }
+                }
+            } else {
+                // Ajouter une nouvelle plage d'1h
+                dispos.push([heure, heure + 1]);
+                dispos.sort((a, b) => a[0] - b[0]);
+                for (let i = 0; i < dispos.length - 1; i++) {
+                    if (dispos[i][1] === dispos[i + 1][0]) {
+                        dispos[i][1] = dispos[i + 1][1];
+                        dispos.splice(i + 1, 1);
+                        i--;
+                    }
+                }
+            }
+            
+            afficherCalendrier();
+        }
+        
+        // Génération du planning
+        async function genererPlanning() {
+        const data = {
+            morceaux: morceaux,
+            disponibilites: disponibilites
+        };
+
+        const response = await fetch('http://localhost:5000/planifier', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        return await response.json();
+    }
+
+        
+        function afficherResultatPlanning(result) {
+            const container = document.getElementById('planning-result');
+            let html = '<h2 style="color: #c92033; margin-bottom: 20px;">📅 Planning des répétitions</h2>';
+            
+            if (Object.keys(result.planning).length === 0) {
+                html += '<p style="color: #999;">Aucun créneau trouvé. Vérifiez les disponibilités.</p>';
+            } else {
+                html += '<div style="display: grid; gap: 15px;">';
+                for (const [creneau, morceauxList] of Object.entries(result.planning)) {
+                    html += `
+                        <div style="background: linear-gradient(135deg, #c92033 0%, #080605 100%); 
+                                    padding: 20px; border-radius: 12px; color: white;">
+                            <div style="font-weight: bold; font-size: 1.2em; margin-bottom: 8px;">${creneau}</div>
+                            <div>${morceauxList.join(', ')}</div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+            }
+            
+            if (result.morceaux_non_planifies.length > 0) {
+                html += `
+                    <div style="background: #fff3cd; padding: 20px; border-radius: 12px; 
+                                margin-top: 20px; border-left: 4px solid #ffc107;">
+                        <strong>⚠️ Morceaux non planifiés :</strong><br>
+                        ${result.morceaux_non_planifies.join(', ')}
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        // Listener pour Enter dans les inputs
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+            
+            document.getElementById('input-musicien').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') ajouterMusicienModal();
+            });
+
+            // Listener pour arrêter le drag quand on relâche la souris n'importe où
+            document.addEventListener('mouseup', endDrag);
+
+            // Listener pour cliquer sur la date
+            document.getElementById('date-display').addEventListener('click', toggleEditDate);
+        });
+    </script>
+</body>
+</html>
