@@ -22,6 +22,7 @@ morceaux = [
 #Règle simple :
 #   [] = aucune disponibilité ce jour-là
 #   [[10, 12], [14, 16]] = disponible de 10h à 12h ET de 14h à 16h
+
 disponibilites = {
     "Ugo": [
         [],  # Lundi

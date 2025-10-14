@@ -798,14 +798,21 @@
             morceaux: morceaux,
             disponibilites: disponibilites
         };
+        
 
-        const response = await fetch('http://localhost:5000/planifier', {
+        console.log("Données envoyées :", data);
+        const response = await fetch("http://127.0.0.1:5000/planifier" ,
+        {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-
-        return await response.json();
+        
+        text = await response.json();
+        
+        document.getElementById('planning-result').innerHTML = JSON.stringify(text.planning);
+    
+        return "";
     }
 
         
